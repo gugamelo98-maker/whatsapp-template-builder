@@ -228,6 +228,7 @@ textarea{resize:vertical;min-height:80px;}
       <div class="page-tab" onclick="switchTab('builder')">2 · Template</div>
       <div class="page-tab" onclick="switchTab('dispatch')">3 · Disparar</div>
       <div class="page-tab" onclick="switchTab('criar-waba')">4 · Criar WABA</div>
+      <div class="page-tab" onclick="switchTab('revisao')">5 · Revisão</div>
     </div>
   </div>
 </div>
@@ -456,6 +457,47 @@ textarea{resize:vertical;min-height:80px;}
     </div>
   </div>
 
+  <!-- ══ Tab 5: Revisão ══ -->
+  <div class="tab-pane" id="tab-revisao">
+    <div class="section-title">Contestar Recategorização</div>
+    <div class="section-sub">Lista os templates recategorizados como MARKETING pela Meta. Selecione os que devem ser UTILITY e envie para análise.</div>
+
+    <div class="card" style="max-width:600px;">
+      <div class="card-head"><span class="card-title">Selecionar WABA</span></div>
+      <div class="field" style="display:flex;gap:8px;">
+        <input type="text" id="revWabaId" placeholder="WABA ID" style="flex:1;font-family:var(--mono);"/>
+        <button class="btn btn-primary" id="btnBuscarTemplates" onclick="buscarTemplatesMarketing()">
+          <div class="spin spin-w"></div><span class="lbl">Buscar</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card" id="revCard" style="display:none;">
+      <div class="card-head">
+        <span class="card-title">Templates recategorizados como MARKETING</span>
+        <div class="card-actions">
+          <span id="revSelCount" class="badge badge-amber" style="display:none">0 selecionados</span>
+        </div>
+      </div>
+      <div id="revTemplateList"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="togAllRev(true)">Selecionar todos</button>
+        <button class="btn btn-ghost btn-sm" onclick="togAllRev(false)">Limpar</button>
+      </div>
+    </div>
+
+    <div id="revResultCard" class="card" style="display:none;">
+      <div class="card-head"><span class="card-title">Resultado</span><span id="revResultSummary" class="badge badge-green"></span></div>
+      <div id="revResultTable"></div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+      <button class="btn btn-primary" id="btnContestar" onclick="contestarTemplates()" disabled style="max-width:260px;width:100%;justify-content:center;">
+        <div class="spin spin-w"></div><span class="lbl">📨 Enviar para análise</span>
+      </button>
+    </div>
+  </div>
+
   <!-- ══ Tab 3: Dispatch ══ -->
   <div class="tab-pane" id="tab-dispatch">
     <div class="section-title">Disparar para WABAs</div>
@@ -513,7 +555,7 @@ function switchTab(id){
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.page-tab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('tab-'+id).classList.add('active');
-  var idx={'wabas':0,'builder':1,'dispatch':2,'criar-waba':3}[id];
+  var idx={'wabas':0,'builder':1,'dispatch':2,'criar-waba':3,'revisao':4}[id];
   document.querySelectorAll('.page-tab')[idx].classList.add('active');
   if(id==='dispatch') buildDispatchView();
 }
@@ -677,7 +719,7 @@ function fmtTxt(marker){
 function addBtn(type){
   if(tplButtons.length>=10)return;
   var id=++tplBtnId;
-  tplButtons.push({id:id,type:type,text:'',value:''});
+  tplButtons.push({id:id,type:type,text:'',value:'',urlType:'static',urlExample:''});
   renderBtns();updateJSON();updatePreview();
 }
 function removeBtn(id){
@@ -695,6 +737,19 @@ function renderBtns(){
     var vPh={URL:'https://ex.com/{{1}}',PHONE_NUMBER:'+5511999999999',COPY_CODE:'ABCD1234',OTP:''}[b.type]||'';
     var vLbl={URL:'URL',PHONE_NUMBER:'Número',COPY_CODE:'Código',OTP:'Tipo'}[b.type]||'';
     var vField=b.type==='QUICK_REPLY'?'':
+      b.type==='URL'?
+        '<div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;">'+
+          '<div style="display:flex;align-items:center;gap:5px;">'+
+            '<span style="font-size:10px;color:var(--text3);white-space:nowrap">URL</span>'+
+            '<input type="text" value="'+esc(b.value)+'" placeholder="https://site.com/{{1}}" oninput="setBtnVal('+b.id+',this.value)" style="flex:1"/>'+
+            '<div style="display:flex;gap:3px;flex-shrink:0;">'+
+              '<span onclick="setBtnUrlType('+b.id+',\'static\')" style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;cursor:pointer;'+(b.urlType==='static'?'background:var(--idim);border:1px solid var(--ibdr);color:var(--indigo)':'background:var(--s3);border:1px solid var(--bd);color:var(--text3)')+'">Estático</span>'+
+              '<span onclick="setBtnUrlType('+b.id+',\'dynamic\')" style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;cursor:pointer;'+(b.urlType==='dynamic'?'background:var(--idim);border:1px solid var(--ibdr);color:var(--indigo)':'background:var(--s3);border:1px solid var(--bd);color:var(--text3)')+'">Dinâmico</span>'+
+            '</div>'+
+          '</div>'+
+          (b.urlType==='dynamic'?'<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:10px;color:var(--text3);white-space:nowrap">Exemplo</span><input type="text" value="'+esc(b.urlExample||'')+'" placeholder="https://site.com/pedido123" oninput="setBtnUrlExample('+b.id+',this.value)" style="flex:1"/></div>':'') +
+        '</div>'
+      :
       '<div style="display:flex;align-items:center;gap:5px;min-width:140px;">'+
         '<span style="font-size:10px;color:var(--text3);white-space:nowrap">'+vLbl+'</span>'+
         '<input type="text" value="'+esc(b.value)+'" placeholder="'+vPh+'" oninput="setBtnVal('+b.id+',this.value)" style="flex:1"/>'+
@@ -711,6 +766,8 @@ function renderBtns(){
 }
 function setBtnTxt(id,v){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.text=v;updateJSON();updatePreview();}}
 function setBtnVal(id,v){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.value=v;updateJSON();updatePreview();}}
+function setBtnUrlType(id,t){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.urlType=t;renderBtns();updateJSON();updatePreview();}}
+function setBtnUrlExample(id,v){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.urlExample=v;updateJSON();}}
 
 // ── Build payload ──────────────────────────────────────
 function buildPayload(){
@@ -750,7 +807,7 @@ function buildPayload(){
   if(tplButtons.length){
     var btns=tplButtons.map(function(b){
       var obj={type:b.type,text:b.text||''};
-      if(b.type==='URL'&&b.value) obj.url=b.value;
+      if(b.type==='URL'&&b.value){obj.url=b.value;if(b.urlType==='dynamic'&&b.urlExample) obj.example=[b.urlExample];}
       if(b.type==='PHONE_NUMBER'&&b.value) obj.phone_number=b.value;
       if(b.type==='COPY_CODE'&&b.value) obj.example=[b.value];
       return obj;
@@ -924,6 +981,102 @@ async function disparar(){
 
   btn.classList.remove('loading');btn.disabled=false;
   progLabel.textContent='Concluído · ✓'+ok+' criado'+(ok!==1?'s':'')+' · ✗'+fail+' erro'+(fail!==1?'s':'');
+}
+
+// ── Revisão ────────────────────────────────────────────
+var revTemplates=[];
+var revSel=new Set();
+
+async function buscarTemplatesMarketing(){
+  var ak=document.getElementById('tbApiKey').value.trim();
+  var wabaId=document.getElementById('revWabaId').value.trim();
+  if(!ak||!wabaId){alert('Preencha a API Key na barra superior e o WABA ID.');return;}
+  var btn=document.getElementById('btnBuscarTemplates');
+  btn.classList.add('loading');btn.disabled=true;
+  try{
+    var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/listar-templates',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({waba_id:wabaId,access_token:ak})
+    });
+    var d=await r.json();
+    if(d.error) throw new Error(d.error.message);
+    revTemplates=(d.data||[]).filter(function(t){return t.category==='MARKETING';});
+    revSel=new Set();
+    var card=document.getElementById('revCard');
+    card.style.display='block';
+    renderRevTemplates();
+  }catch(e){
+    alert('Erro: '+e.message);
+  }
+  btn.classList.remove('loading');btn.disabled=false;
+}
+
+function renderRevTemplates(){
+  var el=document.getElementById('revTemplateList');
+  if(!revTemplates.length){
+    el.innerHTML='<div class="empty-state" style="color:var(--green)">✓ Nenhum template recategorizado como MARKETING encontrado.</div>';
+    document.getElementById('btnContestar').disabled=true;
+    return;
+  }
+  el.innerHTML=revTemplates.map(function(t){
+    var sel=revSel.has(t.id);
+    return '<div class="waba-item'+(sel?' sel':'')+'" onclick="togRevTemplate(\''+t.id+'\')" style="margin-bottom:5px;">'+
+      '<div class="waba-check"></div>'+
+      '<div class="waba-info">'+
+        '<div class="waba-name">'+esc(t.name)+'</div>'+
+        '<div class="waba-id">ID: '+t.id+' · '+t.language+'</div>'+
+      '</div>'+
+      '<span class="badge badge-amber">MARKETING</span>'+
+    '</div>';
+  }).join('');
+  updateRevCount();
+}
+
+function togRevTemplate(id){revSel.has(id)?revSel.delete(id):revSel.add(id);renderRevTemplates();}
+function togAllRev(v){revTemplates.forEach(function(t){v?revSel.add(t.id):revSel.delete(t.id);});renderRevTemplates();}
+
+function updateRevCount(){
+  var cnt=revSel.size;
+  var badge=document.getElementById('revSelCount');
+  badge.textContent=cnt+' selecionado'+(cnt===1?'':'s');
+  badge.style.display=cnt?'inline-flex':'none';
+  document.getElementById('btnContestar').disabled=cnt===0;
+}
+
+async function contestarTemplates(){
+  var ak=document.getElementById('tbApiKey').value.trim();
+  var ids=Array.from(revSel);
+  if(!ids.length) return;
+  var btn=document.getElementById('btnContestar');
+  btn.classList.add('loading');btn.disabled=true;
+  var results=[];
+  await Promise.all(ids.map(async function(templateId){
+    var t=revTemplates.find(function(x){return x.id===templateId;})||{id:templateId,name:templateId};
+    try{
+      var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/contestar-categoria',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({template_id:templateId,access_token:ak})
+      });
+      var d=await r.json();
+      results.push({name:t.name,id:templateId,ok:!!d.success,detail:d.success?'Enviado para análise':(d.error?d.error.message:JSON.stringify(d).slice(0,60))});
+    }catch(e){
+      results.push({name:t.name,id:templateId,ok:false,detail:e.message});
+    }
+  }));
+  // show results
+  var ok=results.filter(function(x){return x.ok;}).length;
+  var rc=document.getElementById('revResultCard');
+  rc.style.display='block';
+  document.getElementById('revResultSummary').textContent='✓'+ok+' / '+results.length;
+  document.getElementById('revResultTable').innerHTML=
+    '<table class="dispatch-table"><thead><tr><th>Template</th><th>Status</th><th>Detalhe</th></tr></thead><tbody>'+
+    results.map(function(r){
+      return '<tr><td style="color:var(--text)">'+esc(r.name)+'</td>'+
+        '<td><span class="status-dot '+(r.ok?'dot-ok':'dot-err')+'">'+(r.ok?'✓ ok':'✗ err')+'</span></td>'+
+        '<td style="font-size:11px">'+esc(r.detail)+'</td></tr>';
+    }).join('')+
+    '</tbody></table>';
+  btn.classList.remove('loading');btn.disabled=false;
 }
 
 // ── Criar WABA ─────────────────────────────────────────
