@@ -990,12 +990,12 @@ var revSel=new Set();
 async function buscarTemplatesMarketing(){
   var ak=document.getElementById('tbApiKey').value.trim();
   if(!ak){alert('Preencha a API Key na barra superior.');return;}
-  if(!wabaList.length){alert('Nenhuma WABA cadastrada. Vá à aba 1 e adicione suas WABAs.');return;}
+  if(!allWabas.length){alert('Nenhuma WABA carregada. Vá à aba 1 e clique em "Buscar WABAs" primeiro.');return;}
   var btn=document.getElementById('btnBuscarTemplates');
   btn.classList.add('loading');btn.disabled=true;
   revTemplates=[];revSel=new Set();
   try{
-    var results=await Promise.all(wabaList.map(async function(w){
+    var results=await Promise.all(allWabas.map(async function(w){
       try{
         var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/listar-templates',{
           method:'POST',headers:{'Content-Type':'application/json'},
