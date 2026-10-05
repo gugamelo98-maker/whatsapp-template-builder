@@ -955,7 +955,8 @@ async function disparar(){
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({waba_id:wabaId,access_token:ak,template:payload})
         });
-        var d=await r.json();
+        var txt=await r.text();
+        var d=txt?JSON.parse(txt):{};
         done++;
         if(d.id){
           ok++;
@@ -1063,8 +1064,9 @@ async function contestarTemplates(){
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({template_id:templateId,access_token:ak})
       });
-      var d=await r.json();
-      results.push({name:t.name,id:templateId,ok:!!d.success,detail:d.success?'Enviado para análise':(d.error?d.error.message:JSON.stringify(d).slice(0,60))});
+      var txt=await r.text();
+      var d=txt?JSON.parse(txt):{};
+      results.push({name:t.name,id:templateId,ok:!!d.success,detail:d.success?'Enviado para análise':(d.error?d.error.message:(d.message||JSON.stringify(d).slice(0,80)))});
     }catch(e){
       results.push({name:t.name,id:templateId,ok:false,detail:e.message});
     }
