@@ -463,11 +463,11 @@ textarea{resize:vertical;min-height:80px;}
     <div class="section-sub">Lista os templates recategorizados como MARKETING pela Meta. Selecione os que devem ser UTILITY e envie para análise.</div>
 
     <div class="card" style="max-width:600px;">
-      <div class="card-head"><span class="card-title">Selecionar WABA</span></div>
+      <div class="card-head"><span class="card-title">Buscar em todas as WABAs</span></div>
+      <div class="field" style="color:var(--text2);font-size:12px;margin-bottom:8px;">Serão consultadas todas as WABAs cadastradas na aba 1.</div>
       <div class="field" style="display:flex;gap:8px;">
-        <input type="text" id="revWabaId" placeholder="WABA ID" style="flex:1;font-family:var(--mono);"/>
-        <button class="btn btn-primary" id="btnBuscarTemplates" onclick="buscarTemplatesMarketing()">
-          <div class="spin spin-w"></div><span class="lbl">Buscar</span>
+        <button class="btn btn-primary" id="btnBuscarTemplates" onclick="buscarTemplatesMarketing()" style="width:100%;justify-content:center;">
+          <div class="spin spin-w"></div><span class="lbl">🔍 Buscar templates MARKETING em todas as WABAs</span>
         </button>
       </div>
     </div>
@@ -989,21 +989,27 @@ var revSel=new Set();
 
 async function buscarTemplatesMarketing(){
   var ak=document.getElementById('tbApiKey').value.trim();
-  var wabaId=document.getElementById('revWabaId').value.trim();
-  if(!ak||!wabaId){alert('Preencha a API Key na barra superior e o WABA ID.');return;}
+  if(!ak){alert('Preencha a API Key na barra superior.');return;}
+  if(!wabaList.length){alert('Nenhuma WABA cadastrada. Vá à aba 1 e adicione suas WABAs.');return;}
   var btn=document.getElementById('btnBuscarTemplates');
   btn.classList.add('loading');btn.disabled=true;
+  revTemplates=[];revSel=new Set();
   try{
-    var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/listar-templates',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({waba_id:wabaId,access_token:ak})
-    });
-    var d=await r.json();
-    if(d.error) throw new Error(d.error.message);
-    revTemplates=(d.data||[]).filter(function(t){return t.category==='MARKETING';});
-    revSel=new Set();
-    var card=document.getElementById('revCard');
-    card.style.display='block';
+    var results=await Promise.all(wabaList.map(async function(w){
+      try{
+        var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/listar-templates',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({waba_id:w.id,access_token:ak})
+        });
+        var d=await r.json();
+        if(d.error) return [];
+        return (d.data||[]).filter(function(t){return t.category==='MARKETING';}).map(function(t){
+          return Object.assign({},t,{_wabaName:w.name||w.id});
+        });
+      }catch(e){return [];}
+    }));
+    revTemplates=results.reduce(function(a,b){return a.concat(b);},[]);
+    document.getElementById('revCard').style.display='block';
     renderRevTemplates();
   }catch(e){
     alert('Erro: '+e.message);
@@ -1024,7 +1030,7 @@ function renderRevTemplates(){
       '<div class="waba-check"></div>'+
       '<div class="waba-info">'+
         '<div class="waba-name">'+esc(t.name)+'</div>'+
-        '<div class="waba-id">ID: '+t.id+' · '+t.language+'</div>'+
+        '<div class="waba-id">ID: '+t.id+' · '+t.language+(t._wabaName?' · WABA: '+esc(t._wabaName):'')+'</div>'+
       '</div>'+
       '<span class="badge badge-amber">MARKETING</span>'+
     '</div>';
