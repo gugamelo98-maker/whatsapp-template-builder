@@ -489,8 +489,11 @@ async function buscarWabas(){
   btn.classList.add('loading');btn.disabled=true;
   document.getElementById('wabaList').innerHTML='<div class="empty-state">Buscando...</div>';
   try{
-    var url='https://graph.facebook.com/v19.0/'+biz+'/owned_whatsapp_business_accounts?fields=id,name,timezone_id,message_template_namespace&access_token='+encodeURIComponent(ak);
-    var r=await fetch(url);
+    var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/buscar-wabas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({business_id:biz,access_token:ak})
+    });
     var d=await r.json();
     if(d.error) throw new Error(d.error.message);
     allWabas=(d.data||[]);
@@ -830,10 +833,10 @@ async function disparar(){
     return (async function(){
       updateRow(wabaId,'running','enviando...');
       try{
-        var r=await fetch('https://graph.facebook.com/v19.0/'+wabaId+'/message_templates',{
+        var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/criar-template',{
           method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+ak},
-          body:JSON.stringify(payload)
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({waba_id:wabaId,access_token:ak,template:payload})
         });
         var d=await r.json();
         done++;
