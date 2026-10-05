@@ -480,6 +480,7 @@ textarea{resize:vertical;min-height:80px;}
         </div>
       </div>
       <div id="revTemplateList"></div>
+      <div id="revWabaLinks"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button class="btn btn-ghost btn-sm" onclick="togAllRev(true)">Selecionar todos</button>
         <button class="btn btn-ghost btn-sm" onclick="togAllRev(false)">Limpar</button>
@@ -1005,7 +1006,7 @@ async function buscarTemplatesMarketing(){
         var d=await r.json();
         if(d.error) return [];
         return (d.data||[]).filter(function(t){return t.category==='MARKETING';}).map(function(t){
-          return Object.assign({},t,{_wabaName:w.name||w.id});
+          return Object.assign({},t,{_wabaName:w.name||w.id,_wabaId:w.id});
         });
       }catch(e){return [];}
     }));
@@ -1023,6 +1024,7 @@ function renderRevTemplates(){
   if(!revTemplates.length){
     el.innerHTML='<div class="empty-state" style="color:var(--green)">✓ Nenhum template recategorizado como MARKETING encontrado.</div>';
     document.getElementById('btnContestar').disabled=true;
+    document.getElementById('revWabaLinks').innerHTML='';
     return;
   }
   el.innerHTML=revTemplates.map(function(t){
@@ -1036,6 +1038,25 @@ function renderRevTemplates(){
       '<span class="badge badge-amber">MARKETING</span>'+
     '</div>';
   }).join('');
+  // Links por WABA
+  var biz=document.getElementById('tbBizId').value.trim();
+  var wabaLinks=document.getElementById('revWabaLinks');
+  if(biz){
+    // agrupar WABAs únicas com templates marketing
+    var wabasComMarketing={};
+    revTemplates.forEach(function(t){
+      var w=allWabas.find(function(x){return x.id===t._wabaId;})||{};
+      if(!wabasComMarketing[t._wabaId]) wabasComMarketing[t._wabaId]={id:t._wabaId,name:t._wabaName||t._wabaId};
+    });
+    var links=Object.values(wabasComMarketing).map(function(w){
+      var url='https://business.facebook.com/business-support-home/'+biz+'/'+w.id+'/?templates_tab=category_updates';
+      return '<a href="'+url+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin:4px 4px 0 0;">'+
+        '↗ Pedir análise — '+esc(w.name)+'</a>';
+    }).join('');
+    wabaLinks.innerHTML='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);"><div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Abrir no Business Manager para pedir análise:</div>'+links+'</div>';
+  } else {
+    wabaLinks.innerHTML='<div style="margin-top:8px;font-size:11px;color:var(--text3);">Preencha o Business ID na barra superior para ver os links diretos.</div>';
+  }
   updateRevCount();
 }
 
