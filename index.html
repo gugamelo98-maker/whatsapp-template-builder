@@ -1021,43 +1021,25 @@ async function buscarTemplatesMarketing(){
 
 function renderRevTemplates(){
   var el=document.getElementById('revTemplateList');
+  document.getElementById('revWabaLinks').innerHTML='';
   if(!revTemplates.length){
     el.innerHTML='<div class="empty-state" style="color:var(--green)">✓ Nenhum template recategorizado como MARKETING encontrado.</div>';
-    document.getElementById('btnContestar').disabled=true;
-    document.getElementById('revWabaLinks').innerHTML='';
     return;
   }
+  var biz=document.getElementById('tbBizId').value.trim();
   el.innerHTML=revTemplates.map(function(t){
-    var sel=revSel.has(t.id);
-    return '<div class="waba-item'+(sel?' sel':'')+'" onclick="togRevTemplate(\''+t.id+'\')" style="margin-bottom:5px;">'+
-      '<div class="waba-check"></div>'+
+    var url=biz?'https://business.facebook.com/business-support-home/'+biz+'/'+t._wabaId+'/?templates_tab=category_updates':'';
+    var btn=url?'<a href="'+url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm" style="text-decoration:none;flex-shrink:0;">↗ Pedir análise</a>':'';
+    return '<div class="waba-item" style="margin-bottom:5px;cursor:default;">'+
       '<div class="waba-info">'+
         '<div class="waba-name">'+esc(t.name)+'</div>'+
-        '<div class="waba-id">ID: '+t.id+' · '+t.language+(t._wabaName?' · WABA: '+esc(t._wabaName):'')+'</div>'+
+        '<div class="waba-id">'+t.language+(t._wabaName?' · WABA: '+esc(t._wabaName):'')+'</div>'+
       '</div>'+
-      '<span class="badge badge-amber">MARKETING</span>'+
+      '<span class="badge badge-amber" style="flex-shrink:0;">MARKETING</span>'+
+      btn+
     '</div>';
   }).join('');
-  // Links por WABA
-  var biz=document.getElementById('tbBizId').value.trim();
-  var wabaLinks=document.getElementById('revWabaLinks');
-  if(biz){
-    // agrupar WABAs únicas com templates marketing
-    var wabasComMarketing={};
-    revTemplates.forEach(function(t){
-      var w=allWabas.find(function(x){return x.id===t._wabaId;})||{};
-      if(!wabasComMarketing[t._wabaId]) wabasComMarketing[t._wabaId]={id:t._wabaId,name:t._wabaName||t._wabaId};
-    });
-    var links=Object.values(wabasComMarketing).map(function(w){
-      var url='https://business.facebook.com/business-support-home/'+biz+'/'+w.id+'/?templates_tab=category_updates';
-      return '<a href="'+url+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin:4px 4px 0 0;">'+
-        '↗ Pedir análise — '+esc(w.name)+'</a>';
-    }).join('');
-    wabaLinks.innerHTML='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);"><div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Abrir no Business Manager para pedir análise:</div>'+links+'</div>';
-  } else {
-    wabaLinks.innerHTML='<div style="margin-top:8px;font-size:11px;color:var(--text3);">Preencha o Business ID na barra superior para ver os links diretos.</div>';
-  }
-  updateRevCount();
+  if(!biz) document.getElementById('revWabaLinks').innerHTML='<div style="font-size:11px;color:var(--text3);margin-top:6px;">Preencha o Business ID na barra superior para ver os links diretos.</div>';
 }
 
 function togRevTemplate(id){revSel.has(id)?revSel.delete(id):revSel.add(id);renderRevTemplates();}
