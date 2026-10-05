@@ -1,0 +1,871 @@
+<title>Template Builder · WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:     #060810;
+  --s1:     #0b0e18;
+  --s2:     #10141f;
+  --s3:     #151b2a;
+  --bd:     #1f2d45;
+  --bd2:    #283650;
+  --green:  #22c55e;
+  --gdark:  rgba(34,197,94,.06);
+  --gbdr:   rgba(34,197,94,.22);
+  --glow:   rgba(34,197,94,.12);
+  --indigo: #6366f1;
+  --idim:   rgba(99,102,241,.08);
+  --ibdr:   rgba(99,102,241,.25);
+  --red:    #f43f5e;
+  --rdim:   rgba(244,63,94,.07);
+  --rbdr:   rgba(244,63,94,.22);
+  --amber:  #f59e0b;
+  --adim:   rgba(245,158,11,.07);
+  --abdr:   rgba(245,158,11,.20);
+  --text:   #dde3f0;
+  --text2:  #8da0bc;
+  --text3:  #4e6380;
+  --mono:   'JetBrains Mono', monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f4f6fa;--s1:#fff;--s2:#f0f2f7;--s3:#e8ebf2;--bd:#d0d6e4;--bd2:#b8c0d4;
+    --text:#111827;--text2:#4b5878;--text3:#8da0bc;color-scheme:light;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#f4f6fa;--s1:#fff;--s2:#f0f2f7;--s3:#e8ebf2;--bd:#d0d6e4;--bd2:#b8c0d4;
+  --text:#111827;--text2:#4b5878;--text3:#8da0bc;color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100%;}
+
+/* Topbar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:100;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 20px;}
+.topbar-inner{max-width:1100px;margin:0 auto;height:52px;display:flex;align-items:center;gap:12px;}
+.logo-mark{width:28px;height:28px;background:var(--gdark);border:1px solid var(--gbdr);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-mark svg{width:14px;height:14px;fill:var(--green);}
+.brand{font-size:13px;font-weight:600;color:var(--text);}
+.brand-sub{font-size:11px;color:var(--text3);}
+.tb-spacer{flex:1;}
+.tb-field{display:flex;align-items:center;gap:7px;}
+.tb-label{font-size:11px;color:var(--text3);white-space:nowrap;}
+.tb-input{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;font-size:11px;font-family:var(--mono);color:var(--text);outline:none;width:190px;transition:border-color .15s;}
+.tb-input:focus{border-color:var(--indigo);}
+.btn-topbar{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.btn-topbar:hover{border-color:var(--bd2);color:var(--text);}
+
+/* Tabs */
+.page-tabs{display:flex;border-bottom:1px solid var(--bd);margin-bottom:0;}
+.page-tab{padding:12px 18px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;user-select:none;}
+.page-tab.active{color:var(--text);border-bottom-color:var(--green);}
+.page-tab:hover:not(.active){color:var(--text2);}
+
+/* Shell */
+.shell{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* Two-col layout for template builder */
+.two-col-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+@media(max-width:760px){.two-col-layout{grid-template-columns:1fr;}.preview-col{order:-1;}}
+
+/* Card */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:10px;}
+.card:last-child{margin-bottom:0;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bd);}
+.card-title{font-size:11px;font-weight:600;color:var(--text2);}
+.card-actions{display:flex;gap:6px;align-items:center;}
+
+/* Fields */
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-bottom:5px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:500px){.field-row{grid-template-columns:1fr;}}
+input[type=text],input[type=url],select,textarea{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;}
+input[type=text]:focus,input[type=url]:focus,select:focus,textarea:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+input::placeholder,textarea::placeholder{color:var(--text3);}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238da0bc' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+textarea{resize:vertical;min-height:80px;}
+.hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5;}
+.char-count{font-size:10px;color:var(--text3);float:right;font-variant-numeric:tabular-nums;}
+
+/* Buttons */
+.btn{padding:7px 13px;border:none;border-radius:7px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;}
+.btn-primary{background:var(--green);color:#000;}
+.btn-primary:hover{background:#1db954;}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+.btn-indigo{background:var(--indigo);color:#fff;}
+.btn-indigo:hover{background:#4f52e8;}
+.btn-indigo:disabled{opacity:.35;cursor:not-allowed;}
+.btn-ghost{background:var(--s2);border:1px solid var(--bd);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--bd2);color:var(--text);}
+.btn-danger{background:var(--rdim);border:1px solid var(--rbdr);color:var(--red);}
+.btn-danger:hover{background:rgba(244,63,94,.14);}
+.btn-sm{padding:4px 9px;font-size:11px;font-weight:500;border-radius:6px;}
+.btn-block{width:100%;justify-content:center;padding:11px;font-size:13px;margin-top:4px;}
+.spin{width:11px;height:11px;border:2px solid rgba(0,0,0,.15);border-top-color:#000;border-radius:50%;animation:spin .65s linear infinite;display:none;}
+.spin-w{border-color:rgba(255,255,255,.2);border-top-color:#fff;}
+.btn.loading .spin{display:block;}
+.btn.loading .lbl{display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Section */
+.section-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.015em;margin-bottom:3px;}
+.section-sub{font-size:11px;color:var(--text3);margin-bottom:16px;}
+
+/* Badge */
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;flex-shrink:0;}
+.badge-green{background:var(--gdark);color:var(--green);border:1px solid var(--gbdr);}
+.badge-amber{background:var(--adim);color:var(--amber);border:1px solid var(--abdr);}
+.badge-indigo{background:var(--idim);color:var(--indigo);border:1px solid var(--ibdr);}
+.badge-red{background:var(--rdim);color:var(--red);border:1px solid var(--rbdr);}
+
+/* Cat/fmt tabs */
+.cat-tabs{display:flex;gap:6px;margin-bottom:2px;flex-wrap:wrap;}
+.cat-tab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:var(--s2);border:1px solid var(--bd);color:var(--text3);transition:all .15s;}
+.cat-tab.active{background:var(--idim);border-color:var(--ibdr);color:var(--indigo);}
+.fmt-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.fmt-tab{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;background:var(--s2);border:1px solid var(--bd);color:var(--text3);transition:all .15s;}
+.fmt-tab.active{background:var(--gdark);border-color:var(--gbdr);color:var(--green);}
+
+/* Var chip */
+.var-chip{display:inline-flex;align-items:center;gap:5px;background:var(--idim);border:1px solid var(--ibdr);border-radius:5px;padding:2px 8px;font-size:11px;font-family:var(--mono);color:var(--indigo);cursor:pointer;transition:background .12s;user-select:none;}
+.var-chip:hover{background:rgba(99,102,241,.14);}
+
+/* Btn list (template buttons) */
+.tpl-btn-list{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.tpl-btn-item{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;}
+.tpl-btn-row{display:flex;gap:8px;align-items:center;flex:1;flex-wrap:wrap;}
+.tpl-btn-row input{flex:1;min-width:100px;}
+
+/* JSON */
+.json-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;}
+.json-body{font-family:var(--mono);font-size:11px;color:var(--text2);padding:12px;overflow-x:auto;white-space:pre;max-height:240px;overflow-y:auto;line-height:1.6;}
+.json-body::-webkit-scrollbar{width:3px;height:3px;}
+.json-body::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.k{color:var(--indigo);}.s{color:var(--green);}.n{color:var(--amber);}.b{color:var(--red);}
+
+/* WhatsApp bubble preview */
+.preview-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 100px);}
+.preview-phone{background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden;}
+.preview-header-bar{background:#075e54;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.preview-avatar{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.preview-contact{font-size:12px;font-weight:600;color:#fff;}
+.preview-status{font-size:10px;color:rgba(255,255,255,.7);}
+.preview-chat{background:#e5ddd5;padding:12px;min-height:160px;}
+.preview-bubble{background:#fff;border-radius:0 8px 8px 8px;padding:8px 10px;max-width:260px;box-shadow:0 1px 2px rgba(0,0,0,.12);font-size:12px;color:#111;line-height:1.5;margin-bottom:4px;}
+.bubble-hdr-img{width:100%;height:72px;background:#d0ccc8;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888;overflow:hidden;}
+.bubble-hdr-img img{width:100%;height:100%;object-fit:cover;}
+.bubble-body-text{white-space:pre-wrap;word-break:break-word;}
+.bubble-footer-text{font-size:11px;color:#888;margin-top:5px;}
+.bubble-time{font-size:10px;color:#aaa;text-align:right;margin-top:4px;}
+.bubble-btn-item{border-top:1px solid #e0dcd8;margin-top:6px;padding-top:7px;font-size:12px;font-weight:600;color:#128c7e;text-align:center;}
+
+/* ── WABA selector (Tab 1) ── */
+.waba-item{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:10px 13px;cursor:pointer;transition:border-color .12s,background .12s;user-select:none;margin-bottom:5px;}
+.waba-item:hover{border-color:var(--bd2);}
+.waba-item.sel{border-color:var(--gbdr);background:var(--gdark);}
+.waba-check{width:15px;height:15px;border:1.5px solid var(--bd2);border-radius:4px;flex-shrink:0;position:relative;transition:all .12s;}
+.waba-item.sel .waba-check{background:var(--green);border-color:var(--green);}
+.waba-item.sel .waba-check::after{content:'';position:absolute;width:7px;height:4px;border-left:1.5px solid #000;border-bottom:1.5px solid #000;transform:rotate(-45deg) translate(1px,-1px);top:3px;left:2px;}
+.waba-info{flex:1;min-width:0;}
+.waba-name{font-size:12px;font-weight:600;color:var(--text);}
+.waba-id{font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:1px;}
+
+/* Dispatch results */
+.dispatch-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.dispatch-table th{font-size:10px;font-weight:600;color:var(--text3);text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd);letter-spacing:.03em;text-transform:uppercase;}
+.dispatch-table td{font-size:11px;padding:7px 8px;border-bottom:1px solid var(--bd);color:var(--text2);vertical-align:middle;}
+.dispatch-table td:first-child{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.dispatch-table tr:last-child td{border-bottom:none;}
+.status-dot{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;}
+.dot-wait{color:var(--amber);}
+.dot-ok{color:var(--green);}
+.dot-err{color:var(--red);}
+.dot-pend{color:var(--text3);}
+
+/* Progress bar */
+.prog-bar-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:6px;height:6px;overflow:hidden;margin:8px 0;}
+.prog-bar{height:100%;background:var(--green);border-radius:6px;transition:width .3s;}
+
+/* Empty */
+.empty-state{padding:16px;text-align:center;color:var(--text3);font-size:12px;}
+
+/* Search row */
+.search-row{display:flex;gap:8px;margin-bottom:12px;}
+.search-row input{flex:1;}
+</style>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </div>
+    <span class="brand">Template Builder</span>
+    <span class="brand-sub">· Multi-WABA</span>
+    <div class="tb-spacer"></div>
+    <div class="tb-field">
+      <span class="tb-label">Business ID</span>
+      <input id="tbBizId" class="tb-input" type="text" placeholder="123456789012345"/>
+    </div>
+    <div class="tb-field">
+      <span class="tb-label">API Key</span>
+      <input id="tbApiKey" class="tb-input" type="text" placeholder="Token de acesso..."/>
+    </div>
+    <button class="btn-topbar" onclick="salvarCreds()">Salvar</button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div style="background:var(--s1);border-bottom:1px solid var(--bd);">
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;">
+    <div class="page-tabs">
+      <div class="page-tab active" onclick="switchTab('wabas')">1 · WABAs</div>
+      <div class="page-tab" onclick="switchTab('builder')">2 · Template</div>
+      <div class="page-tab" onclick="switchTab('dispatch')">3 · Disparar</div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ══ Tab 1: WABAs ══ -->
+  <div class="tab-pane active" id="tab-wabas">
+    <div class="section-title">Selecionar WABAs</div>
+    <div class="section-sub">Busque todas as WABAs do seu Business Portfolio e escolha em quais o template será criado.</div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Buscar WABAs</span>
+        <div class="card-actions">
+          <span id="wabaSelCount" class="badge badge-green" style="display:none">0 selecionadas</span>
+        </div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="wabaFilter" placeholder="Filtrar por nome ou ID..." oninput="filterWabas()"/>
+        <button class="btn btn-primary" id="btnBuscarWabas" onclick="buscarWabas()">
+          <div class="spin"></div><span class="lbl">Buscar WABAs</span>
+        </button>
+      </div>
+      <div id="wabaList"><div class="empty-state">Clique em "Buscar WABAs" para carregar.</div></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="togAllWabas(true)">Selecionar todas</button>
+        <button class="btn btn-ghost btn-sm" onclick="togAllWabas(false)">Limpar</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+      <button class="btn btn-primary" onclick="switchTab('builder')" id="btnNextBuilder" disabled>
+        Próximo — montar template →
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Tab 2: Builder ══ -->
+  <div class="tab-pane" id="tab-builder">
+    <div class="two-col-layout">
+
+      <!-- Build col -->
+      <div>
+        <div class="section-title">Montar template</div>
+        <div class="section-sub">Configure o template. Ele será replicado para todas as WABAs selecionadas.</div>
+
+        <!-- Identificação -->
+        <div class="card">
+          <div class="card-head"><span class="card-title">Identificação</span></div>
+          <div class="field-row">
+            <div class="field">
+              <label>Nome <span style="color:var(--red)">*</span></label>
+              <input type="text" id="tplName" placeholder="nome_do_template" oninput="sanitizeName(this);updatePreview();updateJSON()"/>
+              <div class="hint">Minúsculas, números e underscores.</div>
+            </div>
+            <div class="field">
+              <label>Idioma <span style="color:var(--red)">*</span></label>
+              <select id="tplLang" onchange="updatePreview();updateJSON()">
+                <option value="pt_BR">pt_BR — Português (Brasil)</option>
+                <option value="pt_PT">pt_PT — Português (Portugal)</option>
+                <option value="en_US">en_US — English (US)</option>
+                <option value="es_AR">es_AR — Español (Argentina)</option>
+                <option value="es_ES">es_ES — Español (España)</option>
+                <option value="fr_FR">fr_FR — Français</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Categoria</label>
+            <div class="cat-tabs">
+              <div class="cat-tab active" data-cat="MARKETING" onclick="setCat(this)">MARKETING</div>
+              <div class="cat-tab" data-cat="UTILITY" onclick="setCat(this)">UTILITY</div>
+              <div class="cat-tab" data-cat="AUTHENTICATION" onclick="setCat(this)">AUTHENTICATION</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Formato de parâmetros</label>
+            <div class="cat-tabs">
+              <div class="cat-tab active" data-pf="POSITIONAL" onclick="setPF(this)">POSITIONAL — {{1}} {{2}}</div>
+              <div class="cat-tab" data-pf="NAMED" onclick="setPF(this)">NAMED — {{nome}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Header <span style="color:var(--text3);font-weight:400">(opcional)</span></span>
+            <span id="headerBadge" class="badge badge-indigo" style="display:none"></span>
+          </div>
+          <div class="fmt-tabs">
+            <div class="fmt-tab active" data-fmt="NONE" onclick="setHdrFmt(this)">Nenhum</div>
+            <div class="fmt-tab" data-fmt="TEXT" onclick="setHdrFmt(this)">Texto</div>
+            <div class="fmt-tab" data-fmt="IMAGE" onclick="setHdrFmt(this)">Imagem</div>
+            <div class="fmt-tab" data-fmt="VIDEO" onclick="setHdrFmt(this)">Vídeo</div>
+            <div class="fmt-tab" data-fmt="DOCUMENT" onclick="setHdrFmt(this)">Documento</div>
+          </div>
+          <div id="headerFields"></div>
+        </div>
+
+        <!-- Body -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Body <span style="color:var(--red)">*</span></span>
+            <span id="bodyVarsChips" style="display:flex;gap:5px;flex-wrap:wrap"></span>
+          </div>
+          <div class="field">
+            <label>Texto <span id="bodyCharCount" class="char-count">0 / 1024</span></label>
+            <textarea id="bodyText" placeholder="Olá {{1}}, seu pedido {{2}} foi confirmado!" oninput="updateBodyVars();updatePreview();updateJSON()"></textarea>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="insertVar('body')">+ Variável</button>
+              <button class="btn btn-ghost btn-sm" onclick="fmtTxt('*')">*Negrito*</button>
+              <button class="btn btn-ghost btn-sm" onclick="fmtTxt('_')">_Itálico_</button>
+              <button class="btn btn-ghost btn-sm" onclick="fmtTxt('~')">~Tachado~</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card">
+          <div class="card-head"><span class="card-title">Footer <span style="color:var(--text3);font-weight:400">(opcional)</span></span></div>
+          <div class="field">
+            <label>Texto <span id="ftCC" class="char-count">0 / 60</span></label>
+            <input type="text" id="footerText" placeholder="Não responda a esta mensagem." maxlength="60" oninput="document.getElementById('ftCC').textContent=this.value.length+' / 60';updatePreview();updateJSON()"/>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Buttons <span style="color:var(--text3);font-weight:400">(máx 10)</span></span>
+            <span id="btnCount" class="badge badge-indigo" style="display:none"></span>
+          </div>
+          <div id="buttonList" class="tpl-btn-list"></div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="addBtn('QUICK_REPLY')">+ Quick Reply</button>
+            <button class="btn btn-ghost btn-sm" onclick="addBtn('URL')">+ URL</button>
+            <button class="btn btn-ghost btn-sm" onclick="addBtn('PHONE_NUMBER')">+ Telefone</button>
+            <button class="btn btn-ghost btn-sm" onclick="addBtn('COPY_CODE')">+ Copiar código</button>
+            <button class="btn btn-ghost btn-sm" onclick="addBtn('OTP')">+ OTP</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <button class="btn btn-ghost" onclick="switchTab('wabas')">← Voltar</button>
+          <button class="btn btn-primary" onclick="switchTab('dispatch')">Próximo — disparar →</button>
+        </div>
+      </div>
+
+      <!-- Preview col -->
+      <div class="preview-col">
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-head">
+            <span class="card-title">Payload JSON</span>
+            <button class="btn btn-ghost btn-sm" onclick="copyJSON()">Copiar</button>
+          </div>
+          <div class="json-wrap">
+            <div class="json-body" id="jsonOut"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Prévia WhatsApp</span>
+            <span class="badge badge-green">ao vivo</span>
+          </div>
+          <div class="preview-phone">
+            <div class="preview-header-bar">
+              <div class="preview-avatar">🤖</div>
+              <div>
+                <div class="preview-contact">Seu Bot</div>
+                <div class="preview-status">online</div>
+              </div>
+            </div>
+            <div class="preview-chat">
+              <div class="preview-bubble" id="waBubble">
+                <div class="bubble-body-text">Preencha o Body para ver a prévia.</div>
+                <div class="bubble-time">14:32 ✓✓</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ Tab 3: Dispatch ══ -->
+  <div class="tab-pane" id="tab-dispatch">
+    <div class="section-title">Disparar para WABAs</div>
+    <div class="section-sub">O template será criado simultaneamente em todas as WABAs selecionadas. Acompanhe o status de cada uma.</div>
+
+    <div class="card" id="dispatchSummaryCard">
+      <div class="card-head"><span class="card-title">Resumo</span></div>
+      <div id="dispatchSummary" style="font-size:12px;color:var(--text2);">Volte ao passo 1 para selecionar WABAs.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Status por WABA</span>
+        <div class="card-actions">
+          <div id="progWrap" style="display:none;align-items:center;gap:8px;min-width:160px;">
+            <div class="prog-bar-wrap" style="flex:1;">
+              <div class="prog-bar" id="progBar" style="width:0%"></div>
+            </div>
+            <span id="progLabel" style="font-size:10px;color:var(--text3);font-variant-numeric:tabular-nums;white-space:nowrap;"></span>
+          </div>
+        </div>
+      </div>
+      <div id="dispatchTable"><div class="empty-state">Nenhuma WABA selecionada ainda.</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:4px;">
+      <button class="btn btn-ghost" onclick="switchTab('builder')">← Voltar</button>
+      <button class="btn btn-primary btn-block" id="btnDisparar" onclick="disparar()" style="max-width:260px;" disabled>
+        <div class="spin"></div><span class="lbl">🚀 Criar em todas as WABAs</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Creds ──────────────────────────────────────────────
+(function(){
+  try{
+    var biz=localStorage.getItem('meta_biz');
+    var ak=localStorage.getItem('meta_ak');
+    if(biz) document.getElementById('tbBizId').value=biz;
+    if(ak)  document.getElementById('tbApiKey').value=ak;
+  }catch(e){}
+})();
+function salvarCreds(){
+  try{
+    localStorage.setItem('meta_biz',document.getElementById('tbBizId').value.trim());
+    localStorage.setItem('meta_ak', document.getElementById('tbApiKey').value.trim());
+  }catch(e){}
+}
+
+// ── Tabs ───────────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.page-tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+id).classList.add('active');
+  var idx={wabas:0,builder:1,dispatch:2}[id];
+  document.querySelectorAll('.page-tab')[idx].classList.add('active');
+  if(id==='dispatch') buildDispatchView();
+}
+
+// ── WABA state ─────────────────────────────────────────
+var allWabas=[];
+var filtWabas=[];
+var selWabas=new Set();
+
+async function buscarWabas(){
+  var ak=document.getElementById('tbApiKey').value.trim();
+  var biz=document.getElementById('tbBizId').value.trim();
+  if(!ak||!biz){alert('Preencha Business ID e API Key na barra superior.');return;}
+  var btn=document.getElementById('btnBuscarWabas');
+  btn.classList.add('loading');btn.disabled=true;
+  document.getElementById('wabaList').innerHTML='<div class="empty-state">Buscando...</div>';
+  try{
+    var url='https://graph.facebook.com/v19.0/'+biz+'/owned_whatsapp_business_accounts?fields=id,name,timezone_id,message_template_namespace&access_token='+encodeURIComponent(ak);
+    var r=await fetch(url);
+    var d=await r.json();
+    if(d.error) throw new Error(d.error.message);
+    allWabas=(d.data||[]);
+    filtWabas=allWabas.slice();
+    renderWabas();
+  }catch(e){
+    document.getElementById('wabaList').innerHTML='<div class="empty-state" style="color:var(--red)">Erro: '+e.message+'</div>';
+  }
+  btn.classList.remove('loading');btn.disabled=false;
+}
+
+function filterWabas(){
+  var q=document.getElementById('wabaFilter').value.toLowerCase();
+  filtWabas=q?allWabas.filter(function(w){return w.name.toLowerCase().includes(q)||String(w.id).includes(q);}):allWabas.slice();
+  renderWabas();
+}
+
+function renderWabas(){
+  var el=document.getElementById('wabaList');
+  if(!filtWabas.length){el.innerHTML='<div class="empty-state">Nenhuma WABA encontrada.</div>';return;}
+  el.innerHTML=filtWabas.map(function(w){
+    var sel=selWabas.has(w.id);
+    return '<div class="waba-item'+(sel?' sel':'')+'" onclick="togWaba(\''+w.id+'\')">' +
+      '<div class="waba-check"></div>'+
+      '<div class="waba-info">'+
+        '<div class="waba-name">'+esc(w.name||'WABA sem nome')+'</div>'+
+        '<div class="waba-id">ID: '+w.id+(w.message_template_namespace?' · NS: '+w.message_template_namespace:'')+'</div>'+
+      '</div>'+
+      (w.timezone_id?'<span class="badge badge-indigo" style="font-size:10px">TZ '+w.timezone_id+'</span>':'')+
+    '</div>';
+  }).join('');
+  updateWabaCount();
+}
+
+function togWaba(id){
+  selWabas.has(id)?selWabas.delete(id):selWabas.add(id);
+  renderWabas();
+}
+
+function togAllWabas(v){
+  filtWabas.forEach(function(w){v?selWabas.add(w.id):selWabas.delete(w.id);});
+  renderWabas();
+}
+
+function updateWabaCount(){
+  var cnt=selWabas.size;
+  var badge=document.getElementById('wabaSelCount');
+  badge.textContent=cnt+' selecionada'+(cnt===1?'':'s');
+  badge.style.display=cnt?'inline-flex':'none';
+  document.getElementById('btnNextBuilder').disabled=cnt===0;
+}
+
+// ── Template state ─────────────────────────────────────
+var tplState={category:'MARKETING',pf:'POSITIONAL',headerFmt:'NONE'};
+var tplButtons=[];
+var tplBtnId=0;
+
+function sanitizeName(el){el.value=el.value.toLowerCase().replace(/[^a-z0-9_]/g,'');}
+function setCat(el){document.querySelectorAll('.cat-tab[data-cat]').forEach(function(t){t.classList.remove('active');});el.classList.add('active');tplState.category=el.dataset.cat;updateJSON();}
+function setPF(el){document.querySelectorAll('.cat-tab[data-pf]').forEach(function(t){t.classList.remove('active');});el.classList.add('active');tplState.pf=el.dataset.pf;updateJSON();}
+
+function setHdrFmt(el){
+  document.querySelectorAll('.fmt-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  tplState.headerFmt=el.dataset.fmt;
+  var badge=document.getElementById('headerBadge');
+  if(tplState.headerFmt==='NONE'){badge.style.display='none';}else{badge.textContent=tplState.headerFmt;badge.style.display='inline-flex';}
+  renderHdrFields();
+  updatePreview();updateJSON();
+}
+
+function renderHdrFields(){
+  var c=document.getElementById('headerFields');
+  if(tplState.headerFmt==='NONE'){c.innerHTML='';return;}
+  if(tplState.headerFmt==='TEXT'){
+    c.innerHTML='<div class="field"><label>Texto do header <span id="htCC" class="char-count">0/60</span></label>' +
+      '<input type="text" id="headerText" maxlength="60" placeholder="Novidade para {{1}}!" ' +
+      'oninput="tplState.headerText=this.value;document.getElementById(\'htCC\').textContent=this.value.length+\'/60\';updatePreview();updateJSON()"/></div>';
+  }else{
+    var lbl={IMAGE:'URL da imagem',VIDEO:'URL do vídeo',DOCUMENT:'URL do documento'}[tplState.headerFmt];
+    var ph=tplState.headerFmt==='IMAGE'?'https://i.ibb.co/exemplo.jpg':'https://exemplo.com/arquivo.pdf';
+    c.innerHTML='<div class="field"><label>'+lbl+'</label>' +
+      '<input type="url" id="headerUrl" placeholder="'+ph+'" oninput="tplState.headerUrl=this.value;updatePreview();updateJSON()"/>' +
+      '<div class="hint">URL pública acessível pela Meta.</div></div>';
+  }
+}
+
+function updateBodyVars(){
+  var text=document.getElementById('bodyText').value;
+  document.getElementById('bodyCharCount').textContent=text.length+' / 1024';
+  var matches=text.match(/\{\{([^}]+)\}\}/g)||[];
+  var seen=[];matches.forEach(function(m){var k=m.replace(/[{}]/g,'');if(!seen.includes(k))seen.push(k);});
+  document.getElementById('bodyVarsChips').innerHTML=seen.map(function(v){
+    return '<span class="var-chip" onclick="insertVarAt(\''+v+'\')" title="Inserir">{{'+v+'}}</span>';
+  }).join('');
+}
+
+function insertVar(zone){
+  var el=document.getElementById(zone==='body'?'bodyText':'headerText');
+  if(!el)return;
+  var val=el.value,pos=el.selectionStart||val.length;
+  var vars=(val.match(/\{\{(\d+)\}\}/g)||[]);
+  var next=tplState.pf==='POSITIONAL'?(vars.length+1):('var'+(vars.length+1));
+  el.value=val.slice(0,pos)+'{{'+next+'}}'+val.slice(pos);
+  updateBodyVars();updatePreview();updateJSON();
+}
+
+function insertVarAt(name){
+  var el=document.getElementById('bodyText');
+  var pos=el.selectionStart||el.value.length;
+  el.value=el.value.slice(0,pos)+'{{'+name+'}}'+el.value.slice(pos);
+  updateBodyVars();updatePreview();updateJSON();
+}
+
+function fmtTxt(marker){
+  var el=document.getElementById('bodyText');
+  var s=el.selectionStart,e=el.selectionEnd;
+  var sel=el.value.slice(s,e)||'texto';
+  el.value=el.value.slice(0,s)+marker+sel+marker+el.value.slice(e);
+  updateBodyVars();updatePreview();updateJSON();
+}
+
+// Buttons
+function addBtn(type){
+  if(tplButtons.length>=10)return;
+  var id=++tplBtnId;
+  tplButtons.push({id:id,type:type,text:'',value:''});
+  renderBtns();updateJSON();updatePreview();
+}
+function removeBtn(id){
+  tplButtons=tplButtons.filter(function(b){return b.id!==id;});
+  renderBtns();updateJSON();updatePreview();
+}
+function renderBtns(){
+  var el=document.getElementById('buttonList');
+  var cnt=document.getElementById('btnCount');
+  if(!tplButtons.length){el.innerHTML='';cnt.style.display='none';return;}
+  cnt.textContent=tplButtons.length;cnt.style.display='inline-flex';
+  el.innerHTML=tplButtons.map(function(b){
+    var tl={QUICK_REPLY:'Quick Reply',URL:'URL',PHONE_NUMBER:'Telefone',COPY_CODE:'Copiar código',OTP:'OTP'}[b.type]||b.type;
+    var bc=b.type==='QUICK_REPLY'?'badge-green':b.type==='URL'?'badge-indigo':'badge-amber';
+    var vPh={URL:'https://ex.com/{{1}}',PHONE_NUMBER:'+5511999999999',COPY_CODE:'ABCD1234',OTP:''}[b.type]||'';
+    var vLbl={URL:'URL',PHONE_NUMBER:'Número',COPY_CODE:'Código',OTP:'Tipo'}[b.type]||'';
+    var vField=b.type==='QUICK_REPLY'?'':
+      '<div style="display:flex;align-items:center;gap:5px;min-width:140px;">'+
+        '<span style="font-size:10px;color:var(--text3);white-space:nowrap">'+vLbl+'</span>'+
+        '<input type="text" value="'+esc(b.value)+'" placeholder="'+vPh+'" oninput="setBtnVal('+b.id+',this.value)" style="flex:1"/>'+
+      '</div>';
+    return '<div class="tpl-btn-item">'+
+      '<span class="badge '+bc+'" style="margin-top:2px;white-space:nowrap">'+tl+'</span>'+
+      '<div class="tpl-btn-row">'+
+        '<input type="text" value="'+esc(b.text)+'" placeholder="Texto do botão" oninput="setBtnTxt('+b.id+',this.value)"/>'+
+        vField+
+      '</div>'+
+      '<button class="btn btn-danger btn-sm" onclick="removeBtn('+b.id+')" style="flex-shrink:0">✕</button>'+
+    '</div>';
+  }).join('');
+}
+function setBtnTxt(id,v){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.text=v;updateJSON();updatePreview();}}
+function setBtnVal(id,v){var b=tplButtons.find(function(x){return x.id===id;});if(b){b.value=v;updateJSON();updatePreview();}}
+
+// ── Build payload ──────────────────────────────────────
+function buildPayload(){
+  var name=document.getElementById('tplName').value.trim();
+  var lang=document.getElementById('tplLang').value;
+  var components=[];
+
+  if(tplState.headerFmt!=='NONE'){
+    if(tplState.headerFmt==='TEXT'){
+      var ht=(document.getElementById('headerText')||{}).value||'';
+      var hc={type:'HEADER',format:'TEXT',text:ht};
+      var hv=ht.match(/\{\{([^}]+)\}\}/g)||[];
+      if(hv.length) hc.example={header_text:hv.map(function(){return 'Exemplo';})};
+      components.push(hc);
+    }else{
+      var url=(document.getElementById('headerUrl')||{}).value||'';
+      var hc2={type:'HEADER',format:tplState.headerFmt};
+      if(url) hc2.example={header_handle:[url]};
+      components.push(hc2);
+    }
+  }
+
+  var bodyText=document.getElementById('bodyText').value;
+  if(bodyText){
+    var bc={type:'BODY',text:bodyText};
+    var bv=bodyText.match(/\{\{([^}]+)\}\}/g)||[];
+    if(bv.length) bc.example={body_text:[bv.map(function(){return 'Exemplo';})]};
+    components.push(bc);
+  }
+
+  var ft=document.getElementById('footerText').value;
+  if(ft) components.push({type:'FOOTER',text:ft});
+
+  if(tplButtons.length){
+    var btns=tplButtons.map(function(b){
+      var obj={type:b.type,text:b.text||''};
+      if(b.type==='URL'&&b.value) obj.url=b.value;
+      if(b.type==='PHONE_NUMBER'&&b.value) obj.phone_number=b.value;
+      if(b.type==='COPY_CODE'&&b.value) obj.example=[b.value];
+      return obj;
+    });
+    components.push({type:'BUTTONS',buttons:btns});
+  }
+
+  return {
+    name:name||'nome_do_template',
+    language:lang,
+    category:tplState.category,
+    parameter_format:tplState.pf,
+    components:components
+  };
+}
+
+// ── JSON ───────────────────────────────────────────────
+function hl(obj){
+  return JSON.stringify(obj,null,2).replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+    if(/^"/.test(m)) return /:$/.test(m)?'<span class="k">'+m+'</span>':'<span class="s">'+m+'</span>';
+    if(/true|false|null/.test(m)) return '<span class="b">'+m+'</span>';
+    return '<span class="n">'+m+'</span>';
+  });
+}
+function updateJSON(){document.getElementById('jsonOut').innerHTML=hl(buildPayload());}
+function copyJSON(){
+  var text=JSON.stringify(buildPayload(),null,2);
+  try{navigator.clipboard.writeText(text).catch(function(){fb(text);});}catch(e){fb(text);}
+}
+function fb(text){var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
+
+// ── Preview ────────────────────────────────────────────
+function updatePreview(){
+  var bubble=document.getElementById('waBubble');
+  var body=document.getElementById('bodyText').value||'';
+  var exBody=body.replace(/\{\{([^}]+)\}\}/g,function(m,v){return '<strong>['+v+']</strong>';})
+    .replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/_(.*?)_/g,'<em>$1</em>').replace(/~(.*?)~/g,'<s>$1</s>');
+  var html='';
+  if(tplState.headerFmt==='IMAGE'||tplState.headerFmt==='VIDEO'){
+    var url=(document.getElementById('headerUrl')||{}).value||'';
+    html+='<div class="bubble-hdr-img">'+(url?'<img src="'+url+'" onerror="this.style.display=\'none\'"/>':'🖼 '+tplState.headerFmt)+'</div>';
+  }else if(tplState.headerFmt==='DOCUMENT'){
+    html+='<div class="bubble-hdr-img">📄 DOCUMENT</div>';
+  }else if(tplState.headerFmt==='TEXT'){
+    var ht=(document.getElementById('headerText')||{}).value||'';
+    if(ht) html+='<div style="font-weight:700;margin-bottom:5px;font-size:13px">'+ht.replace(/\{\{([^}]+)\}\}/g,'<strong>[$1]</strong>')+'</div>';
+  }
+  html+='<div class="bubble-body-text">'+(exBody||'<span style="color:#aaa">Corpo da mensagem...</span>')+'</div>';
+  var ft=document.getElementById('footerText').value;
+  if(ft) html+='<div class="bubble-footer-text">'+ft+'</div>';
+  html+='<div class="bubble-time">14:32 ✓✓</div>';
+  tplButtons.forEach(function(b){if(b.text) html+='<div class="bubble-btn-item">'+b.text+'</div>';});
+  bubble.innerHTML=html;
+}
+
+// ── Dispatch view ──────────────────────────────────────
+function buildDispatchView(){
+  var selArr=Array.from(selWabas);
+  var summary=document.getElementById('dispatchSummary');
+  var tbl=document.getElementById('dispatchTable');
+  var btn=document.getElementById('btnDisparar');
+
+  if(!selArr.length){
+    summary.innerHTML='<span style="color:var(--red)">Nenhuma WABA selecionada.</span> <a style="color:var(--indigo);cursor:pointer" onclick="switchTab(\'wabas\')">Voltar ao passo 1.</a>';
+    tbl.innerHTML='<div class="empty-state">Nenhuma WABA selecionada ainda.</div>';
+    btn.disabled=true;
+    return;
+  }
+
+  var name=document.getElementById('tplName').value.trim()||'(sem nome)';
+  var body=document.getElementById('bodyText').value.trim();
+  summary.innerHTML='Template <strong style="color:var(--green)">'+esc(name)+'</strong> · ' +
+    '<strong>'+selArr.length+'</strong> WABA'+(selArr.length>1?'s':'')+
+    (body?'':' · <span style="color:var(--red)">Body vazio!</span>');
+
+  btn.disabled=!body||!document.getElementById('tplName').value.trim();
+
+  // Build table
+  var rows=selArr.map(function(id){
+    var w=allWabas.find(function(x){return x.id===id;})||{id:id,name:id};
+    return {id:id,name:w.name||id,status:'pending',detail:''};
+  });
+  window._dispatchRows=rows;
+  renderDispatchTable(rows);
+  document.getElementById('progWrap').style.display='none';
+}
+
+function renderDispatchTable(rows){
+  if(!rows||!rows.length){document.getElementById('dispatchTable').innerHTML='<div class="empty-state">Nenhuma WABA.</div>';return;}
+  var html='<table class="dispatch-table"><thead><tr><th>WABA ID</th><th>Nome</th><th>Status</th><th>Detalhe</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var sc=r.status==='ok'?'dot-ok':r.status==='err'?'dot-err':r.status==='running'?'dot-wait':'dot-pend';
+    var si=r.status==='ok'?'✓':r.status==='err'?'✗':r.status==='running'?'⏳':'—';
+    html+='<tr id="drow_'+r.id+'">'+
+      '<td>'+r.id+'</td>'+
+      '<td style="color:var(--text)">'+esc(r.name)+'</td>'+
+      '<td><span class="status-dot '+sc+'">'+si+' '+r.status+'</span></td>'+
+      '<td style="font-family:var(--mono);font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.detail)+'</td>'+
+    '</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('dispatchTable').innerHTML=html;
+}
+
+function updateRow(id,status,detail){
+  var rows=window._dispatchRows||[];
+  var r=rows.find(function(x){return x.id===id;});
+  if(r){r.status=status;r.detail=detail||'';}
+  var tr=document.getElementById('drow_'+id);
+  if(!tr) return;
+  var sc=status==='ok'?'dot-ok':status==='err'?'dot-err':status==='running'?'dot-wait':'dot-pend';
+  var si=status==='ok'?'✓':status==='err'?'✗':status==='running'?'⏳':'—';
+  tr.children[2].innerHTML='<span class="status-dot '+sc+'">'+si+' '+status+'</span>';
+  tr.children[3].textContent=detail||'';
+}
+
+// ── Disparar ───────────────────────────────────────────
+async function disparar(){
+  var ak=document.getElementById('tbApiKey').value.trim();
+  if(!ak){alert('API Key não preenchida na barra superior.');return;}
+  var selArr=Array.from(selWabas);
+  if(!selArr.length){alert('Nenhuma WABA selecionada.');return;}
+
+  var payload=buildPayload();
+  var btn=document.getElementById('btnDisparar');
+  btn.classList.add('loading');btn.disabled=true;
+
+  var progWrap=document.getElementById('progWrap');
+  var progBar=document.getElementById('progBar');
+  var progLabel=document.getElementById('progLabel');
+  progWrap.style.display='flex';
+
+  var total=selArr.length, ok=0, fail=0, done=0;
+
+  // Mark all as pending
+  selArr.forEach(function(id){updateRow(id,'pending','aguardando...');});
+
+  // Fire all in parallel
+  var promises=selArr.map(function(wabaId){
+    return (async function(){
+      updateRow(wabaId,'running','enviando...');
+      try{
+        var r=await fetch('https://graph.facebook.com/v19.0/'+wabaId+'/message_templates',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+ak},
+          body:JSON.stringify(payload)
+        });
+        var d=await r.json();
+        done++;
+        if(d.id){
+          ok++;
+          updateRow(wabaId,'ok','ID: '+d.id+' · '+(d.status||'PENDING'));
+        }else if(d.error){
+          fail++;
+          updateRow(wabaId,'err',d.error.message||'Erro desconhecido');
+        }else{
+          fail++;
+          updateRow(wabaId,'err',JSON.stringify(d).slice(0,80));
+        }
+      }catch(e){
+        done++;fail++;
+        updateRow(wabaId,'err',e.message||'Erro de rede');
+      }
+      var pct=Math.round(done/total*100);
+      progBar.style.width=pct+'%';
+      progLabel.textContent=done+' / '+total+' · ✓'+ok+' ✗'+fail;
+    })();
+  });
+
+  await Promise.all(promises);
+
+  btn.classList.remove('loading');btn.disabled=false;
+  progLabel.textContent='Concluído · ✓'+ok+' criado'+(ok!==1?'s':'')+' · ✗'+fail+' erro'+(fail!==1?'s':'');
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// Init
+updateJSON();
+updatePreview();
+</script>
