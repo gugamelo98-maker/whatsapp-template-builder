@@ -227,8 +227,7 @@ textarea{resize:vertical;min-height:80px;}
       <div class="page-tab active" onclick="switchTab('wabas')">1 · WABAs</div>
       <div class="page-tab" onclick="switchTab('builder')">2 · Template</div>
       <div class="page-tab" onclick="switchTab('dispatch')">3 · Disparar</div>
-      <div class="page-tab" onclick="switchTab('criar-waba')">4 · Criar WABA</div>
-      <div class="page-tab" onclick="switchTab('revisao')">5 · Revisão</div>
+      <div class="page-tab" onclick="switchTab('revisao')">4 · Revisão</div>
     </div>
   </div>
 </div>
@@ -408,47 +407,7 @@ textarea{resize:vertical;min-height:80px;}
     </div>
   </div>
 
-  <!-- ══ Tab 4: Criar WABA ══ -->
-  <div class="tab-pane" id="tab-criar-waba">
-    <div class="section-title">Criar WABA</div>
-    <div class="section-sub">Cria uma nova WhatsApp Business Account vinculada ao seu Business Portfolio.</div>
-
-    <div style="max-width:520px;">
-      <div class="card">
-        <div class="card-head"><span class="card-title">Dados da WABA</span></div>
-        <div class="field">
-          <label>Nome de exibição <span style="color:var(--red)">*</span></label>
-          <input type="text" id="newWabaName" placeholder="Ex: Atendimento"/>
-          <div class="hint">Deve coincidir com o nome comercial registrado na Meta.</div>
-        </div>
-        <div class="field">
-          <label>Categoria</label>
-          <select id="newWabaCat">
-            <option value="OTHER">Outro</option>
-            <option value="AUTOMOTIVE">Automotivo</option>
-            <option value="BEAUTY_SPA_SALON">Beleza / Spa</option>
-            <option value="CLOTHING_APPAREL">Vestuário</option>
-            <option value="EDUCATION">Educação</option>
-            <option value="ENTERTAINMENT">Entretenimento</option>
-            <option value="FOOD_GROCERY">Alimentação</option>
-            <option value="HEALTH_WELLNESS">Saúde</option>
-            <option value="HOME_DECOR_FURNISHINGS">Casa</option>
-            <option value="NON_PROFIT">ONG</option>
-            <option value="PROFESSIONAL_SERVICES">Serviços profissionais</option>
-            <option value="RETAIL">Varejo</option>
-            <option value="TRAVEL_TRANSPORTATION">Viagem</option>
-            <option value="TECHNOLOGY">Tecnologia</option>
-          </select>
-        </div>
-        <div id="criarWabaResult" style="display:none;margin-top:10px;padding:10px;border-radius:7px;font-size:12px;"></div>
-        <button class="btn btn-primary btn-block" id="btnCriarWaba" onclick="criarWaba()" style="margin-top:8px;">
-          <div class="spin spin-w"></div><span class="lbl">Criar WABA</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ Tab 5: Revisão ══ -->
+  <!-- ══ Tab 4: Revisão ══ -->
   <div class="tab-pane" id="tab-revisao">
     <div class="section-title">Contestar Recategorização</div>
     <div class="section-sub">Lista os templates recategorizados como MARKETING pela Meta. Selecione os que devem ser UTILITY e envie para análise.</div>
@@ -547,7 +506,7 @@ function switchTab(id){
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.page-tab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('tab-'+id).classList.add('active');
-  var idx={'wabas':0,'builder':1,'dispatch':2,'criar-waba':3,'revisao':4}[id];
+  var idx={'wabas':0,'builder':1,'dispatch':2,'revisao':3}[id];
   document.querySelectorAll('.page-tab')[idx].classList.add('active');
   if(id==='dispatch') buildDispatchView();
 }
@@ -1116,44 +1075,6 @@ async function contestarTemplates(){
         '<td style="font-size:11px">'+esc(r.detail)+'</td></tr>';
     }).join('')+
     '</tbody></table>';
-  btn.classList.remove('loading');btn.disabled=false;
-}
-
-// ── Criar WABA ─────────────────────────────────────────
-async function criarWaba(){
-  var ak=document.getElementById('tbApiKey').value.trim();
-  var biz=document.getElementById('tbBizId').value.trim();
-  var name=document.getElementById('newWabaName').value.trim();
-  var cat=document.getElementById('newWabaCat').value;
-  if(!ak||!biz){alert('Preencha Business ID e API Key na barra superior.');return;}
-  if(!name){alert('Preencha o nome de exibição.');return;}
-  var btn=document.getElementById('btnCriarWaba');
-  var res=document.getElementById('criarWabaResult');
-  btn.classList.add('loading');btn.disabled=true;
-  res.style.display='none';
-  try{
-    var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/criar-waba',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({business_id:biz,access_token:ak,name:name,category:cat})
-    });
-    var d=await r.json();
-    if(d.id){
-      res.style.background='var(--gdark)';res.style.border='1px solid var(--gbdr)';res.style.color='var(--green)';
-      res.innerHTML='✓ WABA criada com sucesso! ID: <strong>'+d.id+'</strong>';
-    }else if(d.error){
-      res.style.background='var(--rdim)';res.style.border='1px solid var(--rbdr)';res.style.color='var(--red)';
-      res.innerHTML='✗ '+esc(d.error.message||'Erro desconhecido');
-    }else{
-      res.style.background='var(--adim)';res.style.border='1px solid var(--abdr)';res.style.color='var(--amber)';
-      res.innerHTML=esc(JSON.stringify(d).slice(0,200));
-    }
-    res.style.display='block';
-  }catch(e){
-    res.style.background='var(--rdim)';res.style.border='1px solid var(--rbdr)';res.style.color='var(--red)';
-    res.innerHTML='✗ '+esc(e.message||'Erro de rede');
-    res.style.display='block';
-  }
   btn.classList.remove('loading');btn.disabled=false;
 }
 
