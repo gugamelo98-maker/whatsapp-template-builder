@@ -657,16 +657,12 @@ function renderHdrFields(){
     c.innerHTML='<div class="field"><label>Texto do header <span id="htCC" class="char-count">0/60</span></label>' +
       '<input type="text" id="headerText" maxlength="60" placeholder="Novidade para {{1}}!" ' +
       'oninput="tplState.headerText=this.value;document.getElementById(\'htCC\').textContent=this.value.length+\'/60\';updatePreview();updateJSON()"/></div>';
-  }else if(tplState.headerFmt==='IMAGE'){
-    c.innerHTML='<div class="field"><label>Imagem do header <span style="color:var(--text3);font-weight:400">(JPG, PNG, WEBP)</span></label>' +
-      '<input type="file" id="headerFile" accept="image/jpeg,image/png,image/webp" onchange="tplState.headerFile=this.files[0];updatePreview();updateJSON()"/>' +
-      '<div class="hint">A imagem será enviada para a Meta ao criar o template.</div></div>';
   }else{
-    var lbl={VIDEO:'URL do vídeo',DOCUMENT:'URL do documento'}[tplState.headerFmt];
-    var ph='https://exemplo.com/arquivo.pdf';
+    var lbl={IMAGE:'URL da imagem de exemplo',VIDEO:'URL do vídeo',DOCUMENT:'URL do documento'}[tplState.headerFmt];
+    var ph=tplState.headerFmt==='IMAGE'?'https://i.ibb.co/exemplo.jpg':'https://exemplo.com/arquivo.pdf';
     c.innerHTML='<div class="field"><label>'+lbl+'</label>' +
       '<input type="url" id="headerUrl" placeholder="'+ph+'" oninput="tplState.headerUrl=this.value;updatePreview();updateJSON()"/>' +
-      '<div class="hint">URL pública acessível pela Meta.</div></div>';
+      '<div class="hint">'+(tplState.headerFmt==='IMAGE'?'URL pública da imagem de exemplo (JPG, PNG). A imagem real é enviada na hora do disparo da mensagem.':'URL pública acessível pela Meta.')+'</div></div>';
   }
 }
 
@@ -787,9 +783,6 @@ function buildPayload(){
       var hv=ht.match(/\{\{([^}]+)\}\}/g)||[];
       if(hv.length) hc.example={header_text:hv.map(function(){return 'Exemplo';})};
       components.push(hc);
-    }else if(tplState.headerFmt==='IMAGE'){
-      // handle será preenchido após upload no momento do disparo
-      components.push({type:'HEADER',format:'IMAGE',example:{header_handle:['__PENDING__']}});
     }else{
       var url=(document.getElementById('headerUrl')||{}).value||'';
       var hc2={type:'HEADER',format:tplState.headerFmt};
@@ -854,13 +847,9 @@ function updatePreview(){
   var exBody=body.replace(/\{\{([^}]+)\}\}/g,function(m,v){return '<strong>['+v+']</strong>';})
     .replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/_(.*?)_/g,'<em>$1</em>').replace(/~(.*?)~/g,'<s>$1</s>');
   var html='';
-  if(tplState.headerFmt==='IMAGE'){
-    var previewSrc='';
-    if(tplState.headerFile){previewSrc=URL.createObjectURL(tplState.headerFile);}
-    html+='<div class="bubble-hdr-img">'+(previewSrc?'<img src="'+previewSrc+'" style="max-width:100%;border-radius:6px"/>':'🖼 IMAGE')+'</div>';
-  }else if(tplState.headerFmt==='VIDEO'){
+  if(tplState.headerFmt==='IMAGE'||tplState.headerFmt==='VIDEO'){
     var url=(document.getElementById('headerUrl')||{}).value||'';
-    html+='<div class="bubble-hdr-img">'+(url?'<img src="'+url+'" onerror="this.style.display=\'none\'"/>':'▶ VIDEO')+'</div>';
+    html+='<div class="bubble-hdr-img">'+(url&&tplState.headerFmt==='IMAGE'?'<img src="'+url+'" onerror="this.style.display=\'none\'" style="max-width:100%;border-radius:6px"/>':'🖼 '+tplState.headerFmt)+'</div>';
   }else if(tplState.headerFmt==='DOCUMENT'){
     html+='<div class="bubble-hdr-img">📄 DOCUMENT</div>';
   }else if(tplState.headerFmt==='TEXT'){
@@ -954,14 +943,6 @@ async function disparar(){
 
   var total=selArr.length, ok=0, fail=0, done=0;
 
-  // Se tem header IMAGE, fazer upload para cada WABA e obter handle
-  var needsImageUpload=tplState.headerFmt==='IMAGE';
-  if(needsImageUpload && !tplState.headerFile){
-    alert('Selecione uma imagem para o header antes de disparar.');
-    btn.classList.remove('loading');btn.disabled=false;
-    return;
-  }
-
   // Mark all as pending
   selArr.forEach(function(id){updateRow(id,'pending','aguardando...');});
 
@@ -971,30 +952,6 @@ async function disparar(){
       updateRow(wabaId,'running','enviando...');
       try{
         var finalPayload=JSON.parse(JSON.stringify(payload));
-
-        // Upload imagem se necessário
-        if(needsImageUpload){
-          updateRow(wabaId,'running','fazendo upload da imagem...');
-          var fd=new FormData();
-          fd.append('data',tplState.headerFile,tplState.headerFile.name);
-          fd.append('waba_id',wabaId);
-          fd.append('access_token',ak);
-          var upR=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/upload-imagem',{method:'POST',body:fd});
-          var upTxt=await upR.text();
-          var upD=upTxt?JSON.parse(upTxt):{};
-          if(upD.error||!upD.h){
-            done++;fail++;
-            updateRow(wabaId,'err','Erro no upload da imagem: '+(upD.message||JSON.stringify(upD).slice(0,80)));
-            var pct=Math.round(done/total*100);
-            progBar.style.width=pct+'%';
-            progLabel.textContent=done+' / '+total+' · ✓'+ok+' ✗'+fail;
-            return;
-          }
-          // Substitui __PENDING__ pelo handle real
-          var hdrComp=finalPayload.components.find(function(c){return c.type==='HEADER'&&c.format==='IMAGE';});
-          if(hdrComp) hdrComp.example={header_handle:[upD.h]};
-          updateRow(wabaId,'running','criando template...');
-        }
 
         var r=await fetch('https://rarelookingorca-n8n.cloudfy.live/webhook/criar-template',{
           method:'POST',
